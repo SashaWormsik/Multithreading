@@ -45,7 +45,7 @@ public class Base {
     private Base() {
         BaseProperties properties = BaseProperties.getInstance();
         int countOfTerminals = properties.getNumberOfTerminals();
-        this.terminals = new ArrayList<>(countOfTerminals); // FIXME
+        this.terminals = new ArrayList<>(countOfTerminals);
         for (int i = 0; i < countOfTerminals; i++) {
             this.terminals.add(new Terminal());
         }
@@ -68,23 +68,29 @@ public class Base {
     public Terminal getFreeTerminal(Truck truck) throws InterruptedException {
         Terminal terminal;
         truck.setTruckState(Truck.TruckState.WAITING);
-        lockGetTerminal.lock();
-        while ((terminal = findFreeTerminal()) == null || checkPossibilityLoadingUnloading(truck)) { // FIXME
-            LOGGER.info("\tTruck ID=  {} waiting free terminal", truck.getTruckId());
-            condition.await();
+        try {
+            lockGetTerminal.lock();
+            while ((terminal = findFreeTerminal()) == null || checkPossibilityLoadingUnloading(truck)) { // FIXME
+                LOGGER.info("\tTruck ID=  {} waiting free terminal", truck.getTruckId());
+                condition.await();
+            }
+            terminal.setIsFree(false);// FIXME
+            LOGGER.info(LogStringUtil.getStringForLog(truck, terminal, TimeUtil.getTime()) + " RECEIVED TERMINAL");
+        } finally {
+            lockGetTerminal.unlock();
         }
-        terminal.getIsFree().compareAndSet(true, false);// FIXME
-        LOGGER.info(LogStringUtil.getStringForLog(truck, terminal, TimeUtil.getTime()) + " RECEIVED TERMINAL");
-        lockGetTerminal.unlock();
         return terminal;
     }
 
     public void releaseTerminal(Terminal terminal) {
-        lockGetTerminal.lock();
-        terminal.getIsFree().compareAndSet(false, true);// FIXME
-        LOGGER.info("\tTERMINAL ID {} is free", terminal.getId());
-        condition.signalAll();
-        lockGetTerminal.unlock();
+        try {
+            lockGetTerminal.lock();
+            terminal.setIsFree(true);// FIXME
+            LOGGER.info("\tTERMINAL ID {} is free", terminal.getId());
+        } finally {
+            condition.signalAll();
+            lockGetTerminal.unlock();
+        }
     }
 
     private boolean checkPossibilityLoadingUnloading(Truck truck) {
@@ -96,7 +102,7 @@ public class Base {
     private Terminal findFreeTerminal() {
         Terminal terminal;
         terminal = terminals.stream().
-                filter(temp -> temp.getIsFree().get()).
+                filter(Terminal::getIsFree).
                 findFirst().
                 orElse(null);
         return terminal;

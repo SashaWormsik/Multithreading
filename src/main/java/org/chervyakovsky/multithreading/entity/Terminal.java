@@ -18,8 +18,11 @@ public class Terminal {
         return id;
     }
 
-    public AtomicBoolean getIsFree() {
-        return isFree;
+    public boolean getIsFree() {
+        return isFree.get();
     }
 
+    public void setIsFree(boolean newValue){
+       this.isFree.set(newValue);
+    }
 }

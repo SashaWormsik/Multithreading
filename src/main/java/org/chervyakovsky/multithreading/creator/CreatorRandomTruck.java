@@ -4,10 +4,10 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.chervyakovsky.multithreading.entity.Truck;
 import org.chervyakovsky.multithreading.util.BaseProperties;
+import org.chervyakovsky.multithreading.util.RandomValuesUtil;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 public class CreatorRandomTruck {
 
@@ -15,17 +15,14 @@ public class CreatorRandomTruck {
 
     private static final int MAX_CAPACITY = 15;
     private static final int MIN_CAPACITY = 5;
-    public static final int CORRECTION_FACTOR_FOR_CAPACITY = 1;
     public static final double LOADING_PERCENTAGE = 0.3;
 
     private static CreatorRandomTruck instance;
 
-    private final Random random;
     private final int countOfTruck;
 
     private CreatorRandomTruck() {
         BaseProperties properties = BaseProperties.getInstance();
-        this.random = new Random();
         this.countOfTruck = properties.getNumberOfTrucks();
     }
 
@@ -47,7 +44,7 @@ public class CreatorRandomTruck {
     }
 
     private Truck createTruck() {
-        int capacity = random.nextInt(MAX_CAPACITY - MIN_CAPACITY) + MIN_CAPACITY + CORRECTION_FACTOR_FOR_CAPACITY;
+        int capacity = RandomValuesUtil.getInstance().getRandomInt(MIN_CAPACITY, MAX_CAPACITY);
         int cargoQuantity = (int) Math.ceil(capacity * LOADING_PERCENTAGE);
         return new Truck(capacity, cargoQuantity);
     }

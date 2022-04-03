@@ -1,13 +1,12 @@
 package org.chervyakovsky.multithreading.entity;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.chervyakovsky.multithreading.util.GeneratorId;
 import org.chervyakovsky.multithreading.util.LogStringUtil;
+import org.chervyakovsky.multithreading.util.RandomValuesUtil;
 import org.chervyakovsky.multithreading.util.TimeUtil;
 
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class Truck extends Thread {
@@ -16,21 +15,20 @@ public class Truck extends Thread {
 
     public static final int MAX_LOAD_UNLOAD_SPEED = 1000;
     public static final int MIN_LOAD_UNLOAD_SPEED = 500;
-    public static final int CORRECTION_FACTOR_FOR_SPEED = 1;
+
+    private final int capacity;
 
     private long truckId;
     private boolean forLoading;
     private boolean isPerishable;
     private TruckState truckState;
-    private int capacity;
     private int cargoQuantity;
 
 
     public Truck(int capacity, int cargoQuantity) {
-        Random random = new Random();
         this.truckId = GeneratorId.generate();
-        this.forLoading = random.nextBoolean();
-        this.isPerishable = random.nextBoolean();
+        this.forLoading = RandomValuesUtil.getInstance().getRandomBoolean();
+        this.isPerishable = RandomValuesUtil.getInstance().getRandomBoolean();
         this.truckState = TruckState.CREATED;
         this.capacity = capacity;
         this.cargoQuantity = cargoQuantity;
@@ -81,10 +79,6 @@ public class Truck extends Thread {
         return capacity;
     }
 
-    public void setCapacity(int capacity) {
-        this.capacity = capacity;
-    }
-
     public int getCargoQuantity() {
         return cargoQuantity;
     }
@@ -122,19 +116,15 @@ public class Truck extends Thread {
     }
 
     private void load(Base base) throws InterruptedException {
-        Random random = new Random();
         int quantityPerUpload = this.capacity - this.cargoQuantity;
-        int speedLoad = random.nextInt(MAX_LOAD_UNLOAD_SPEED - MIN_LOAD_UNLOAD_SPEED)
-                + MIN_LOAD_UNLOAD_SPEED + CORRECTION_FACTOR_FOR_SPEED;
+        int speedLoad = RandomValuesUtil.getInstance().getRandomInt(MIN_LOAD_UNLOAD_SPEED, MAX_LOAD_UNLOAD_SPEED);
         TimeUnit.MILLISECONDS.sleep(speedLoad * quantityPerUpload);
         base.getAvailableCargoInBase().getAndAdd(-quantityPerUpload);
         this.cargoQuantity = this.capacity; // FIXME
     }
 
     private void unload(Base base) throws InterruptedException {
-        Random random = new Random();
-        int speedLoad = random.nextInt(MAX_LOAD_UNLOAD_SPEED - MIN_LOAD_UNLOAD_SPEED)
-                + MIN_LOAD_UNLOAD_SPEED + CORRECTION_FACTOR_FOR_SPEED;
+        int speedLoad = RandomValuesUtil.getInstance().getRandomInt(MIN_LOAD_UNLOAD_SPEED, MAX_LOAD_UNLOAD_SPEED);
         TimeUnit.MILLISECONDS.sleep(speedLoad * this.cargoQuantity);
         base.getAvailableCargoInBase().getAndAdd(this.cargoQuantity);
         this.cargoQuantity -= this.cargoQuantity; // FIXME
