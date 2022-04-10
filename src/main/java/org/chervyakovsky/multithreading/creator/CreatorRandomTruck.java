@@ -13,9 +13,9 @@ public class CreatorRandomTruck {
 
     private static final Logger LOGGER = LogManager.getLogger();
 
-    private static final int MAX_CAPACITY = 15;
-    private static final int MIN_CAPACITY = 5;
-    public static final double LOADING_PERCENTAGE = 0.3;
+    private static final int MAX_CAPACITY = 50;
+    private static final int MIN_CAPACITY = 25;
+    public static final double LOADING_PERCENTAGE = 0.5;
 
     private static CreatorRandomTruck instance;
 

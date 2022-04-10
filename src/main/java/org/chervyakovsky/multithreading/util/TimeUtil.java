@@ -5,7 +5,7 @@ import java.util.Date;
 
 public class TimeUtil {
 
-    public static String getTime(){
+    public static String getTime() {
         String time;
         Date dateNow = new Date();
         SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.SSS");

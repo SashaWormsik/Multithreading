@@ -16,6 +16,10 @@ import java.util.concurrent.locks.ReentrantLock;
 public class Base {
     private static final Logger LOGGER = LogManager.getLogger();
 
+    private static final double MAX_FILL_PERCENTAGE = 0.75;
+    private static final double MIN_FILL_PERCENTAGE = 0.25;
+    private static final double OPTIMAL_FILL_PERCENTAGE = 0.5;
+
     private static final AtomicBoolean isCreate = new AtomicBoolean(false);
     private static final ReentrantLock lockGetInstance = new ReentrantLock(true);
     private static final ReentrantLock lockGetTerminal = new ReentrantLock(true);
@@ -70,11 +74,11 @@ public class Base {
         truck.setTruckState(Truck.TruckState.WAITING);
         try {
             lockGetTerminal.lock();
-            while ((terminal = findFreeTerminal()) == null || checkPossibilityLoadingUnloading(truck)) { // FIXME
+            while ((terminal = findFreeTerminal()) == null || checkPossibilityLoadingUnloading(truck)) {
                 LOGGER.info("\tTruck ID=  {} waiting free terminal", truck.getTruckId());
                 condition.await();
             }
-            terminal.setIsFree(false);// FIXME
+            terminal.setIsFree(false);
             LOGGER.info(LogStringUtil.getStringForLog(truck, terminal, TimeUtil.getTime()) + " RECEIVED TERMINAL");
         } finally {
             lockGetTerminal.unlock();
@@ -85,12 +89,33 @@ public class Base {
     public void releaseTerminal(Terminal terminal) {
         try {
             lockGetTerminal.lock();
-            terminal.setIsFree(true);// FIXME
-            LOGGER.info("\tTERMINAL ID {} is free", terminal.getId());
+            terminal.setIsFree(true);
+            LOGGER.info("TERMINAL ID {} is free", terminal.getId());
         } finally {
             condition.signalAll();
             lockGetTerminal.unlock();
         }
+    }
+
+    public void addingRemovingCargoInBase() {
+        LOGGER.info("The amount of cargo on the base = " + this.availableCargoInBase);
+        if (checkingFullnessBase()) {
+            try {
+                lockGetTerminal.lock();
+                int optimalAmountOfCargo = (int) (this.capacity.get() * OPTIMAL_FILL_PERCENTAGE);
+                this.getAvailableCargoInBase().set(optimalAmountOfCargo);
+            } finally {
+                condition.signalAll();
+                lockGetTerminal.unlock();
+            }
+        }
+        LOGGER.info("The amount of cargo on the base = " + this.availableCargoInBase);
+    }
+
+    private boolean checkingFullnessBase() {
+        int maxFullness = (int) (this.capacity.get() * MAX_FILL_PERCENTAGE);
+        int minFullness = (int) (this.capacity.get() * MIN_FILL_PERCENTAGE);
+        return maxFullness < this.availableCargoInBase.get() || minFullness > this.availableCargoInBase.get();
     }
 
     private boolean checkPossibilityLoadingUnloading(Truck truck) {

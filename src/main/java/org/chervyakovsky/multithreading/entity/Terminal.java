@@ -22,7 +22,25 @@ public class Terminal {
         return isFree.get();
     }
 
-    public void setIsFree(boolean newValue){
-       this.isFree.set(newValue);
+    public void setIsFree(boolean newValue) {
+        this.isFree.set(newValue);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || o.getClass() != this.getClass()) {
+            return false;
+        }
+        Terminal terminal = (Terminal) o;
+        return this.id == terminal.getId()
+                && this.getIsFree() == terminal.getIsFree();
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(this.id) + Boolean.hashCode(this.getIsFree());
     }
 }

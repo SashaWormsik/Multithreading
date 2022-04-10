@@ -7,6 +7,7 @@ import org.chervyakovsky.multithreading.util.LogStringUtil;
 import org.chervyakovsky.multithreading.util.RandomValuesUtil;
 import org.chervyakovsky.multithreading.util.TimeUtil;
 
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 public class Truck extends Thread {
@@ -47,10 +48,6 @@ public class Truck extends Thread {
         return truckId;
     }
 
-    public void setTruckId(long truckId) {
-        this.truckId = truckId;
-    }
-
     public boolean isForLoading() {
         return forLoading;
     }
@@ -61,10 +58,6 @@ public class Truck extends Thread {
 
     public boolean isPerishable() {
         return isPerishable;
-    }
-
-    public void setPerishable(boolean perishable) {
-        isPerishable = perishable;
     }
 
     public TruckState getTruckState() {
@@ -83,17 +76,15 @@ public class Truck extends Thread {
         return cargoQuantity;
     }
 
-    public void setCargoQuantity(int cargoQuantity) {
-        this.cargoQuantity = cargoQuantity;
-    }
-
     @Override
     public void run() {
         LOGGER.info(LogStringUtil.getStringForLog(this, null, TimeUtil.getTime()));
         Base base = Base.getInstance();
+        QueueOfTrucks queueOfTrucks = QueueOfTrucks.getInstance();
         Terminal terminal;
         try {
-            terminal = base.getFreeTerminal(this);
+            queueOfTrucks.getInLine(this);
+            terminal = queueOfTrucks.goToBase(this);
             loadUnloadProcess(terminal);
             base.releaseTerminal(terminal);
         } catch (InterruptedException exception) {
@@ -120,14 +111,36 @@ public class Truck extends Thread {
         int speedLoad = RandomValuesUtil.getInstance().getRandomInt(MIN_LOAD_UNLOAD_SPEED, MAX_LOAD_UNLOAD_SPEED);
         TimeUnit.MILLISECONDS.sleep(speedLoad * quantityPerUpload);
         base.getAvailableCargoInBase().getAndAdd(-quantityPerUpload);
-        this.cargoQuantity = this.capacity; // FIXME
+        this.cargoQuantity = this.capacity;
     }
 
     private void unload(Base base) throws InterruptedException {
         int speedLoad = RandomValuesUtil.getInstance().getRandomInt(MIN_LOAD_UNLOAD_SPEED, MAX_LOAD_UNLOAD_SPEED);
         TimeUnit.MILLISECONDS.sleep(speedLoad * this.cargoQuantity);
         base.getAvailableCargoInBase().getAndAdd(this.cargoQuantity);
-        this.cargoQuantity -= this.cargoQuantity; // FIXME
+        this.cargoQuantity -= this.cargoQuantity;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || o.getClass() != this.getClass()) {
+            return false;
+        }
+        Truck truck = (Truck) o;
+        return capacity == truck.capacity &&
+                truckId == truck.truckId &&
+                forLoading == truck.forLoading &&
+                isPerishable == truck.isPerishable &&
+                cargoQuantity == truck.cargoQuantity &&
+                truckState.equals(truck.truckState);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(capacity, truckId, forLoading, isPerishable, truckState, cargoQuantity);
     }
 
     @Override

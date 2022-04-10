@@ -25,7 +25,6 @@ public class RandomValuesUtil {
     }
 
     public int getRandomInt(int minValue, int maxValue) {
-        int result = random.nextInt(maxValue - minValue + CORRECTION_FACTOR) + minValue;
-        return result;
+        return random.nextInt(maxValue - minValue + CORRECTION_FACTOR) + minValue;
     }
 }
